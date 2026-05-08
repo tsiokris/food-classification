@@ -219,5 +219,6 @@ __marimo__/
 
 # Claude Code
 .claude/
-data/
+data/annotations
+data/raw
 CLAUDE.md
