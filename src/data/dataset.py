@@ -1,12 +1,16 @@
 import pandas as pd
 from torch.utils.data import Dataset
-from PIL import Image
+from PIL import Image, ImageFile
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 class FoodDataset(Dataset):
 
     def __init__(self, food_dataset_csv, transform=None, split=None):
         self.df = pd.read_csv(food_dataset_csv)
+        all_labels = sorted(self.df["food_label"].unique())
+        self.label_to_idx = {label: idx for idx, label in enumerate(all_labels)}
         if split:
             if isinstance(split, str):
                 split = [split]
@@ -23,4 +27,4 @@ class FoodDataset(Dataset):
         if self.transform:
             img = self.transform(img)
 
-        return img, label
+        return img, self.label_to_idx[label]
