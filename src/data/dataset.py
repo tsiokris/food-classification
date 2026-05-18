@@ -5,8 +5,12 @@ from PIL import Image
 
 class FoodDataset(Dataset):
 
-    def __init__(self, food_dataset_csv, transform=None):
+    def __init__(self, food_dataset_csv, transform=None, split=None):
         self.df = pd.read_csv(food_dataset_csv)
+        if split:
+            if isinstance(split, str):
+                split = [split]
+            self.df = self.df[self.df["split"].isin(split)]
         self.transform = transform
 
     def __len__(self):
