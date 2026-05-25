@@ -17,7 +17,7 @@ FREEZE_BACKBONE = True
 UNFREEZE_LAST_BLOCK = True
 EPOCHS = 10
 RESULTS_DIR = "results"
-BACKBONES = ["resnet50", "efficientnet_b3", "mobilenet_v3_large", "densenet121"]
+BACKBONES = ["efficientnet_b3", "mobilenet_v3_large", "densenet121"]
 
 
 # ----------------------- SETUP --------------------------
@@ -46,8 +46,10 @@ for backbone in BACKBONES:
     ).to(device)
 
     cfg = ARCH_CONFIGS[backbone]
+    specs = cfg["last_block"] if isinstance(cfg["last_block"], list) else [cfg["last_block"]]
+    last_block_params = [p for spec in specs for p in _get_submodule(model.model, spec).parameters()]
     optimizer = torch.optim.Adam([
-        {"params": _get_submodule(model.model, cfg["last_block"]).parameters(), "lr": 1e-4},
+        {"params": last_block_params,                                           "lr": 1e-4},
         {"params": _get_submodule(model.model, cfg["head"]).parameters(),       "lr": 1e-3},
     ])
 
