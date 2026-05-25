@@ -11,12 +11,14 @@ ARCH_CONFIGS = {
     "efficientnet_b3": {
         "in_features": 1536,
         "head": ("classifier", 1),
-        "last_block": ("features", -1),
+        # features[6] and [7] are the last two real MBConv stages; [8] is the final projection conv
+        "last_block": [("features", 6), ("features", 7), ("features", 8)],
     },
     "mobilenet_v3_large": {
         "in_features": 1280,
         "head": ("classifier", 3),
-        "last_block": ("features", -1),
+        # features[13]-[15] are the last InvertedResidual blocks; [16] is the final projection conv
+        "last_block": [("features", 13), ("features", 14), ("features", 15), ("features", 16)],
     },
     "densenet121": {
         "in_features": 1024,
@@ -58,9 +60,12 @@ class FoodClassifier(nn.Module):
                 param.requires_grad = False
 
         if unfreeze_last_block:
-            last_block = _get_submodule(self.model, cfg["last_block"])
-            for param in last_block.parameters():
-                param.requires_grad = True
+            specs = cfg["last_block"]
+            if not isinstance(specs, list):
+                specs = [specs]
+            for spec in specs:
+                for param in _get_submodule(self.model, spec).parameters():
+                    param.requires_grad = True
 
         _set_submodule(self.model, cfg["head"], nn.Linear(cfg["in_features"], num_classes))
 
