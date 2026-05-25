@@ -1,33 +1,29 @@
 import torch
 
 
-def train(model, dataloader, epochs, loss_fn, optimizer, device):
+def train(model, dataloader, loss_fn, optimizer, device):
+    model.train()
+    avg_loss = 0
+    correct = 0
+    total = 0
 
-    for epoch in range(epochs):
-        model.train()
-        avg_loss = 0
-        correct = 0
-        total = 0
+    for step, batch in enumerate(dataloader, 1):
+        images, labels = batch
+        images, labels = images.to(device), labels.to(device)
+        optimizer.zero_grad()
+        predictions = model(images)
+        loss = loss_fn(predictions, labels)
+        loss.backward()
+        optimizer.step()
 
-        for step, batch in enumerate(dataloader, 1):
-            images, labels = batch
-            images, labels = images.to(device), labels.to(device)
-            optimizer.zero_grad()
-            predictions = model(images)
-            loss = loss_fn(predictions, labels)
-            loss.backward()
-            optimizer.step()
+        avg_loss += loss.item()
+        correct += (predictions.argmax(dim=1) == labels).sum().item()
+        total += len(labels)
 
-            avg_loss += loss.item()
-            correct += (predictions.argmax(dim=1) == labels).sum().item()
-            total += len(labels)
+        if step % 10 == 0 or step == len(dataloader):
+            print(f"  step {step}/{len(dataloader)} — batch loss: {loss.item():.4f}")
 
-            if step % 10 == 0 or step == len(dataloader):
-                print(f"  Epoch {epoch+1}/{epochs} — step {step}/{len(dataloader)} — batch loss: {loss.item():.4f}")
-
-        avg_loss = avg_loss / len(dataloader)
-        accuracy = correct / total
-        print(f"Epoch {epoch+1}/{epochs} — loss: {avg_loss:.4f} — accuracy: {accuracy:.4f}")
+    return avg_loss / len(dataloader), correct / total
 
 
 def validate(model, dataloader, loss_fn, device):
@@ -46,9 +42,4 @@ def validate(model, dataloader, loss_fn, device):
             correct += (predictions.argmax(dim=1) == labels).sum().item()
             total += len(labels)
 
-    accuracy = correct/total
-    avg_loss = avg_loss/len(dataloader)
-    print(f"loss: {avg_loss} - Accuracy: {accuracy}")
-
-
-
+    return avg_loss / len(dataloader), correct / total
