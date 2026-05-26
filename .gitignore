@@ -221,5 +221,5 @@ __marimo__/
 .claude/
 data/annotations
 data/raw
-data/total
+data/external
 CLAUDE.md

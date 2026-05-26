@@ -47,30 +47,73 @@ In the current training run, all five folds are used together as the training se
 
 ### 3.1 Architecture
 
-The classifier is built on a **ResNet50** backbone pretrained on ImageNet. The final fully-connected layer is replaced with a new linear layer mapping the 2048-dimensional feature vector to the 42 output classes.
+Four ImageNet-pretrained backbones were evaluated. In each case the original classification head is replaced with a new linear layer mapping to 42 output classes, the full backbone is frozen, and only the last block of convolutional layers plus the new head are trained.
+
+**ResNet50**
 
 ```
-ResNet50 (pretrained)
-  └── [conv1, bn1, relu, maxpool]   — frozen
-  └── layer1                         — frozen
-  └── layer2                         — frozen
-  └── layer3                         — frozen
-  └── layer4                         — fine-tuned (lr = 1e-4)
-  └── fc: Linear(2048 → 42)          — trained from scratch (lr = 1e-3)
+ResNet50 (pretrained, ImageNet1K_V1)
+  └── conv1, bn1, relu, maxpool   — frozen
+  └── layer1                      — frozen
+  └── layer2                      — frozen
+  └── layer3                      — frozen
+  └── layer4                      — fine-tuned  (lr = 1e-4)
+  └── fc: Linear(2048 → 42)       — trained from scratch (lr = 1e-3)
+```
+
+**EfficientNet-B3**
+
+```
+EfficientNet-B3 (pretrained, ImageNet1K_V1)
+  └── features[0–5]               — frozen  (stem + first 6 MBConv stages)
+  └── features[6]                 — fine-tuned  (lr = 1e-4)
+  └── features[7]                 — fine-tuned  (lr = 1e-4)
+  └── features[8]                 — fine-tuned  (lr = 1e-4)  (final projection conv)
+  └── classifier[1]: Linear(1536 → 42) — trained from scratch (lr = 1e-3)
+```
+
+**MobileNet-V3-Large**
+
+```
+MobileNet-V3-Large (pretrained, ImageNet1K_V1)
+  └── features[0–12]              — frozen  (stem + first InvertedResidual blocks)
+  └── features[13]                — fine-tuned  (lr = 1e-4)
+  └── features[14]                — fine-tuned  (lr = 1e-4)
+  └── features[15]                — fine-tuned  (lr = 1e-4)
+  └── features[16]                — fine-tuned  (lr = 1e-4)  (final projection conv)
+  └── classifier[3]: Linear(1280 → 42) — trained from scratch (lr = 1e-3)
+```
+
+**DenseNet121**
+
+```
+DenseNet121 (pretrained, ImageNet1K_V1)
+  └── features.conv0 / norm0      — frozen
+  └── features.denseblock1–3      — frozen
+  └── features.transition1–3      — frozen
+  └── features.denseblock4        — fine-tuned  (lr = 1e-4)
+  └── classifier: Linear(1024 → 42) — trained from scratch (lr = 1e-3)
 ```
 
 ### 3.2 Training strategy
 
-The backbone is initialised with ImageNet weights and most of it is frozen. Only the last residual block (`layer4`) and the new classification head (`fc`) are updated during training.
+The same strategy is applied to all four backbones:
 
-A differential learning rate scheme is applied via two parameter groups in the Adam optimiser:
+1. Load ImageNet-pretrained weights.
+2. Freeze all backbone parameters.
+3. Unfreeze the last convolutional block (see §3.1 per-model details).
+4. Replace the classification head with a new `Linear` layer initialised randomly.
+5. Train with two Adam parameter groups — a slow rate for the unfrozen block and a fast rate for the new head.
 
-- `layer4`: `lr = 1e-4` — fine-tuning of high-level features already learned from ImageNet.
-- `fc`: `lr = 1e-3` — the head is initialised randomly and needs a faster learning rate.
-
-**Loss function:** Cross-entropy loss.  
-**Optimiser:** Adam.  
-**Epochs:** 10.
+| Hyperparameter | Value |
+|---|---|
+| Optimiser | Adam |
+| Loss | Cross-entropy |
+| Last block lr | 1e-4 |
+| Head lr | 1e-3 |
+| Batch size | 32 |
+| Epochs | 10 |
+| Input size | 224 × 224 |
 
 ### 3.3 Data augmentation and preprocessing
 
@@ -104,7 +147,33 @@ Treating multi-food combinations as compound labels (e.g. `rice_chicken`) keeps 
 
 ## 5. Results
 
-*To be added.*
+Four backbones were trained for 10 epochs on the VippStar dataset (~8,668 images, 42 classes) using the strategy described above. All models were evaluated on the combined `holdout_val` + `holdout_test` split.
+
+### 5.1 Summary table
+
+| Model | Train Loss | Train Acc | Val Loss | Val Acc | Best Val Acc (epoch) |
+|---|---|---|---|---|---|
+| ResNet50 | 0.1473 | 95.24% | 0.0486 | 98.73% | **99.19%** (ep. 8) |
+| DenseNet121 | 0.1412 | 95.52% | 0.0527 | 98.27% | 98.92% (ep. 6) |
+| EfficientNet-B3 | 0.1787 | 94.30% | 0.0320 | **99.08%** | **99.08%** (ep. 10) |
+| MobileNet-V3-Large | 0.1364 | **95.86%** | 0.0360 | 98.85% | 98.92% (ep. 7) |
+
+All four models converge to above **98% validation accuracy** within 10 epochs, demonstrating that the transfer learning setup is well-suited for this dataset size.
+
+### 5.2 Observations
+
+- **EfficientNet-B3** achieves the lowest final validation loss (0.032) and best final val accuracy (99.08%), and is still improving at epoch 10 — it may benefit from further training.
+- **ResNet50** peaks earliest (epoch 8, 99.19%) but shows slight overfitting towards the end.
+- **MobileNet-V3-Large** has the best final training accuracy (95.86%) and converges cleanly, making it a strong candidate for a lightweight deployment model.
+- **DenseNet121** performs slightly below the others in final val accuracy, but converges stably.
+
+### 5.3 Training curves
+
+Training and validation loss/accuracy curves for all four models are saved at `results/training_curves.png`.
+
+### 5.4 Class distribution
+
+The class distribution plot (`results/class_distribution.png`) shows the 42 classes sorted by frequency. The dataset has moderate imbalance, with single-food classes generally having more samples than multi-food compound classes.
 
 ---
 
