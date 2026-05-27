@@ -15,13 +15,13 @@ from src.training.train import train, validate
 
 # ----------------------------- DATASET CONFIG --------------------------------
 # Single config → one training run (fast iteration / vippstar baseline)
-DATA_CONFIGS = [VIPPSTAR]
+# DATA_CONFIGS = [VIPPSTAR]
 
 # Single unified fold → one run on the 3-source dataset
 # DATA_CONFIGS = [UNIFIED_FOLD_0]
 
 # All 3 folds → full cross-validation; prints averaged results at the end
-# DATA_CONFIGS = [UNIFIED_FOLD_0, UNIFIED_FOLD_1, UNIFIED_FOLD_2]
+DATA_CONFIGS = [UNIFIED_FOLD_0, UNIFIED_FOLD_1, UNIFIED_FOLD_2]
 # -----------------------------------------------------------------------------
 
 
