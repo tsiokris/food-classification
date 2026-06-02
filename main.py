@@ -78,20 +78,22 @@ for data_config in DATA_CONFIGS:
         for epoch in range(EPOCHS):
             print(f"\nEpoch {epoch + 1}/{EPOCHS}")
             train_loss, train_acc = train(model=model, dataloader=train_dataloader, loss_fn=LOSS_FN, optimizer=optimizer, device=device)
-            val_loss, val_acc     = validate(model=model, dataloader=val_dataloader, loss_fn=LOSS_FN, device=device)
+            val_loss, val_acc, val_top3_acc, val_top5_acc = validate(model=model, dataloader=val_dataloader, loss_fn=LOSS_FN, device=device)
             print(f"  train — loss: {train_loss:.4f}  acc: {train_acc:.4f}")
-            print(f"  val   — loss: {val_loss:.4f}  acc: {val_acc:.4f}")
+            print(f"  val   — loss: {val_loss:.4f}  acc: {val_acc:.4f}  top3: {val_top3_acc:.4f}  top5: {val_top5_acc:.4f}")
             metrics.append({
                 "epoch": epoch + 1,
                 "train_loss": train_loss,
                 "train_acc": train_acc,
                 "val_loss": val_loss,
                 "val_acc": val_acc,
+                "val_top3_acc": val_top3_acc,
+                "val_top5_acc": val_top5_acc,
             })
 
         metrics_path = os.path.join(RESULTS_DIR, f"{data_config.name}_{backbone}_metrics.csv")
         with open(metrics_path, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=["epoch", "train_loss", "train_acc", "val_loss", "val_acc"])
+            writer = csv.DictWriter(f, fieldnames=["epoch", "train_loss", "train_acc", "val_loss", "val_acc", "val_top3_acc", "val_top5_acc"])
             writer.writeheader()
             writer.writerows(metrics)
         print(f"Metrics saved to {metrics_path}")
