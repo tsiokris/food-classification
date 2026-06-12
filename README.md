@@ -1,39 +1,16 @@
 # Food Classification
 
-Multi-class food image classification using transfer learning. Built as an end-to-end ML engineering project — not a notebook, but a structured Python codebase.
+Multi-class food image classification using transfer learning.
 
 ## Overview
 
-- ~8,668 images across 42 food classes (including multi-food combinations)
-- ResNet50 backbone pretrained on ImageNet, with partial fine-tuning
-- 5-fold cross-validation splits + holdout val/test sets
-- Custom PyTorch `Dataset`, `DataLoader`, training loop, and model — all from scratch
+Two datasets:
+- **VippStar** — ~8,668 images, 42 classes, 5-fold CV + holdout val/test
+- **Unified** — three sources (VippStar + MedGR + ODIN), 249 classes, 3-fold CV
 
-## Architecture
+Four backbones compared: ResNet50, EfficientNet-B3, MobileNetV3-Large, DenseNet121 — all ImageNet pretrained, backbone frozen except the last block.
 
-| Component | Details |
-|---|---|
-| Backbone | ResNet50 (ImageNet pretrained) |
-| Frozen layers | All except `layer4` and `fc` |
-| Classification head | `Linear(2048 → 42)` |
-| Optimizer | Adam with per-layer learning rates (`layer4`: 1e-4, `fc`: 1e-3) |
-| Loss | CrossEntropyLoss |
-
-## Project Structure
-
-```
-src/
-  data/
-    preprocessing.py   # builds classification CSV from raw annotations
-    dataset.py         # FoodDataset (PyTorch Dataset)
-    transforms.py      # train/val image transform pipelines
-    dataloader.py      # get_dataloader() utility
-  models/
-    model.py           # FoodClassifier (ResNet50 + custom head)
-  training/
-    train.py           # train() and validate() loops
-main.py                # wires everything together and saves weights
-```
+Tracks top-1, top-3, and top-5 accuracy per epoch. Built as a structured PyTorch codebase (no notebooks).
 
 ## Setup
 
