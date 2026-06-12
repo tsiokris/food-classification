@@ -10,7 +10,7 @@ Two datasets:
 
 Four backbones compared: ResNet50, EfficientNet-B3, MobileNetV3-Large, DenseNet121 — all ImageNet pretrained, backbone frozen except the last block.
 
-Tracks top-1, top-3, and top-5 accuracy per epoch. Built as a structured PyTorch codebase (no notebooks).
+Tracks top-1, top-3, and top-5 accuracy per epoch.
 
 ## Setup
 
