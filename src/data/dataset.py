@@ -27,8 +27,8 @@ class FoodDataset(Dataset):
     def __init__(self, config: DataConfig, split: str, transform=None):
         """
         Args:
-            config:    DataConfig preset (e.g. VIPPSTAR, UNIFIED_FOLD_0).
-            split:     "train" or "val" — resolved to CSV values via the config.
+            config:    DataConfig preset (e.g. ROTATION_0).
+            split:     "train", "val", or "test" — resolved to CSV values via the config.
             transform: torchvision transform pipeline.
         """
         self.config = config
@@ -36,7 +36,12 @@ class FoodDataset(Dataset):
 
         df = pd.read_csv(config.csv_path)
 
-        allowed = config.train_splits if split == "train" else config.val_splits
+        if split == "train":
+            allowed = config.train_splits
+        elif split == "val":
+            allowed = config.val_splits
+        else:
+            allowed = config.test_splits
         self.df = df[df[config.split_col].isin(allowed)].reset_index(drop=True)
 
         if config.classes_csv:
