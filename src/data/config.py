@@ -24,16 +24,16 @@ class DataConfig:
 # holdout_final rows are present in the CSV but excluded from all three splits;
 # they are reserved for a single final evaluation after model selection.
 # ---------------------------------------------------------------------------
-def _rotation(train_fold: int, val_fold: int, test_fold: int) -> DataConfig:
+def _rotation(fold: int) -> DataConfig:
     return DataConfig(
-        name=f"rotation_train{train_fold}_val{val_fold}_test{test_fold}",
+        name=f"rotation_fold{fold}",
         csv_path="data/annotations/master_splits.csv",
         image_col="image_path",
         label_col="label",
-        split_col="fold",
-        train_splits=[f"fold_{train_fold}"],
-        val_splits=[f"fold_{val_fold}"],
-        test_splits=[f"fold_{test_fold}"],
+        split_col="fold_split",
+        train_splits=[f"fold_{fold}_train"],
+        val_splits=[f"fold_{fold}_val"],
+        test_splits=[f"fold_{fold}_test"],
         num_classes=249,
         classes_csv="cnn_splits/classes.csv",
         source_col="source",
@@ -45,6 +45,6 @@ def _rotation(train_fold: int, val_fold: int, test_fold: int) -> DataConfig:
     )
 
 
-ROTATION_0 = _rotation(train_fold=0, val_fold=1, test_fold=2)
-ROTATION_1 = _rotation(train_fold=1, val_fold=2, test_fold=0)
-ROTATION_2 = _rotation(train_fold=2, val_fold=0, test_fold=1)
+ROTATION_0 = _rotation(fold=0)
+ROTATION_1 = _rotation(fold=1)
+ROTATION_2 = _rotation(fold=2)
