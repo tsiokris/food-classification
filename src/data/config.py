@@ -34,7 +34,7 @@ def _rotation(fold: int) -> DataConfig:
         train_splits=[f"fold_{fold}_train"],
         val_splits=[f"fold_{fold}_val"],
         test_splits=[f"fold_{fold}_test"],
-        num_classes=249,
+        num_classes=216,
         classes_csv="cnn_splits/classes.csv",
         source_col="source",
         source_roots={
